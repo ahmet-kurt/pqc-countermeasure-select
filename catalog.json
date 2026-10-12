@@ -1,0 +1,454 @@
+{
+  "about": "Cost catalog of the countermeasure-selection framework. Every value names its source, and every prior without a measurement carries a range for the robustness analysis.",
+  "implementations": [
+    {
+      "id": "pqm4_m4fspeed",
+      "operation": "decaps",
+      "label": "ML-KEM-768 pqm4 m4fspeed (unmasked)",
+      "order": 0,
+      "cycles": 707827,
+      "cycles_source": "pqm4 benchmarks.md at commit cc2c1b99, NUCLEO-L4R5ZI at 24 MHz",
+      "stack_bytes": 6452,
+      "stack_source": "pqm4 benchmarks.md at commit cc2c1b99, reproduced exactly under QEMU",
+      "rand_bytes": 0,
+      "rand_in_cycles": true
+    },
+    {
+      "id": "pqm4_m4fstack",
+      "operation": "decaps",
+      "label": "ML-KEM-768 pqm4 m4fstack (unmasked)",
+      "order": 0,
+      "cycles": 714194,
+      "cycles_source": "pqm4 benchmarks.md at commit cc2c1b99, NUCLEO-L4R5ZI at 24 MHz",
+      "stack_bytes": 2844,
+      "stack_source": "pqm4 benchmarks.md at commit cc2c1b99 (QEMU gives 2,852 B)",
+      "rand_bytes": 0,
+      "rand_in_cycles": true
+    },
+    {
+      "id": "mkm4",
+      "operation": "decaps",
+      "label": "Kyber768 mkm4 of Heinz et al. (2 shares)",
+      "order": 1,
+      "cycles": 3627000,
+      "cycles_source": "Hou et al., IEEE ICDCS 2026, mkm4 on STM32F303 at 24 MHz (Heinz et al. report 2,978,441 cycles on STM32F407)",
+      "stack_bytes": 12808,
+      "stack_source": "Hou et al., IEEE ICDCS 2026, peak SRAM at -O3",
+      "rand_bytes": null,
+      "rand_prior": "bos_o1",
+      "rand_in_cycles": true,
+      "note": "the STM32F303 board has no TRNG, so the randomness source behind these counts is not stated"
+    },
+    {
+      "id": "mkm4_stream",
+      "operation": "decaps",
+      "label": "Kyber768 mkm4 streaming variant of Hou et al. (2 shares)",
+      "order": 1,
+      "cycles": 3583000,
+      "cycles_source": "Hou et al., IEEE ICDCS 2026, STM32F303 at 24 MHz",
+      "stack_bytes": 8456,
+      "stack_source": "Hou et al., IEEE ICDCS 2026, peak SRAM at -O3",
+      "rand_bytes": null,
+      "rand_prior": "bos_o1",
+      "rand_in_cycles": true,
+      "note": "the STM32F303 board has no TRNG, so the randomness source behind these counts is not stated"
+    },
+    {
+      "id": "bos_o1",
+      "operation": "decaps",
+      "label": "Kyber768 of Bos et al. (2 shares)",
+      "order": 1,
+      "cycles": 3116000,
+      "cycles_source": "Bos et al. TCHES 2021(4) Table 2 on an STM32F407G-DISC1, rounded up to whole kilocycles",
+      "stack_bytes": null,
+      "rand_bytes": 12072,
+      "rand_source": "Bos et al., TCHES 2021(4), Table 2",
+      "rand_in_cycles": true
+    },
+    {
+      "id": "bos_o2",
+      "operation": "decaps",
+      "label": "Kyber768 of Bos et al. (3 shares)",
+      "order": 2,
+      "cycles": 44347000,
+      "cycles_source": "Bos et al., TCHES 2021(4), Table 2, less aggressively optimized than first order",
+      "stack_bytes": null,
+      "rand_bytes": 902126,
+      "rand_source": "Bos et al., TCHES 2021(4), Table 2",
+      "rand_in_cycles": true
+    },
+    {
+      "id": "bc_o1",
+      "operation": "decaps",
+      "label": "Kyber768 of Bronchain and Cassiers (2 shares)",
+      "order": 1,
+      "cycles": 10018000,
+      "cycles_source": "Bronchain and Cassiers, TCHES 2022(4), Table 2, NUCLEO-L4R5ZI at 16 MHz with TRNG sampling",
+      "stack_bytes": 12132,
+      "stack_source": "our QEMU measurement of the tches release of pqm4_masked",
+      "rand_bytes": 67908,
+      "rand_source": "our QEMU count of 16,977 TRNG words per decapsulation",
+      "rand_in_cycles": true
+    },
+    {
+      "id": "bc_o2",
+      "operation": "decaps",
+      "label": "Kyber768 of Bronchain and Cassiers (3 shares)",
+      "order": 2,
+      "cycles": 16747000,
+      "cycles_source": "Bronchain and Cassiers, TCHES 2022(4), Table 2, NUCLEO-L4R5ZI at 16 MHz with TRNG sampling",
+      "stack_bytes": 16372,
+      "stack_source": "our QEMU measurement of the tches release of pqm4_masked",
+      "rand_bytes": 197552,
+      "rand_source": "our QEMU count of 49,388 TRNG words per decapsulation",
+      "rand_in_cycles": true
+    },
+    {
+      "id": "bc_o3",
+      "operation": "decaps",
+      "label": "Kyber768 of Bronchain and Cassiers (4 shares)",
+      "order": 3,
+      "cycles": 24709000,
+      "cycles_source": "Bronchain and Cassiers, TCHES 2022(4), Table 2, NUCLEO-L4R5ZI at 16 MHz with TRNG sampling",
+      "stack_bytes": 20476,
+      "stack_source": "our QEMU measurement of pqm4_masked at commit cc1af2a",
+      "rand_bytes": 391432,
+      "rand_source": "our QEMU count of 97,858 TRNG words per decapsulation",
+      "rand_in_cycles": true
+    },
+    {
+      "id": "pqm4_mldsa65_m4f",
+      "operation": "sign",
+      "label": "ML-DSA-65 pqm4 m4f (unmasked)",
+      "order": 0,
+      "cycles": 6193171,
+      "cycles_source": "pqm4 benchmarks.md at commit cc2c1b99 on a NUCLEO-L4R5ZI at 24 MHz, average over 1,000 signatures including rejections",
+      "stack_bytes": 68872,
+      "stack_source": "pqm4 benchmarks.md at commit cc2c1b99, reproduced exactly under QEMU",
+      "rand_bytes": 32,
+      "rand_in_cycles": true,
+      "fips204": true,
+      "rand_source": "pqm4 signing is hedged and reads 32 bytes (RNDBYTES) from the RNG per signature"
+    },
+    {
+      "id": "pqm4_mldsa65_m4fstack",
+      "operation": "sign",
+      "label": "ML-DSA-65 pqm4 m4fstack (unmasked)",
+      "order": 0,
+      "cycles": 24421526,
+      "cycles_source": "pqm4 benchmarks.md at commit cc2c1b99 on a NUCLEO-L4R5ZI at 24 MHz, average over 1,000 signatures including rejections",
+      "stack_bytes": 6616,
+      "stack_source": "pqm4 benchmarks.md at commit cc2c1b99 (QEMU gives 6,624 B)",
+      "rand_bytes": 32,
+      "rand_in_cycles": true,
+      "fips204": true,
+      "rand_source": "pqm4 signing is hedged and reads 32 bytes (RNDBYTES) from the RNG per signature"
+    },
+    {
+      "id": "azouaoui_det",
+      "operation": "sign",
+      "label": "Dilithium3 deterministic signing of Azouaoui et al. (2 shares)",
+      "order": 1,
+      "cycles_per_iteration": 24005000,
+      "cycles_source": "Azouaoui et al. TCHES 2023(4) Section 6.3 on a NUCLEO-L4R5ZI, one pass of signing without rejections with TRNG randomness",
+      "cycles_once": 2716200,
+      "cycles_once_source": "Azouaoui et al. TCHES 2023(4) Table 2, where NTT(s) with 185.4k, ExpandA with 2,160.7k, and H(K||mu) with 370.1k cycles run once per signature",
+      "stack_bytes": 145532,
+      "stack_source": "our QEMU measurement of the masked Dilithium3 of pqm4_masked (2 shares), a re-implementation of this design",
+      "rand_bytes": null,
+      "rand_in_cycles": true,
+      "fips204": true,
+      "fips204_note": "masks the keyed hash that derives y, as required by FIPS 204"
+    },
+    {
+      "id": "azouaoui_rand",
+      "operation": "sign",
+      "label": "Dilithium3 randomized signing of Azouaoui et al. (2 shares)",
+      "order": 1,
+      "cycles_per_iteration": 14282000,
+      "cycles_source": "Azouaoui et al. TCHES 2023(4) Section 6.3 on a NUCLEO-L4R5ZI, one pass of signing without rejections with TRNG randomness",
+      "cycles_once": 2346100,
+      "cycles_once_source": "Azouaoui et al. TCHES 2023(4) Table 2, where NTT(s) and ExpandA run once per signature and the randomized variant skips H(K||mu)",
+      "stack_bytes": 145532,
+      "stack_source": "prior taken from the deterministic measurement",
+      "rand_bytes": null,
+      "rand_in_cycles": true,
+      "fips204": false,
+      "fips204_note": "samples y directly from the TRNG, which departs from FIPS 204"
+    }
+  ],
+  "verifications": {
+    "mldsa65_verify": {
+      "label": "ML-DSA-65 pqm4 m4f verification",
+      "cycles": 2415944,
+      "stack_bytes": 9888,
+      "source": "pqm4 benchmarks.md at commit cc2c1b99 on a NUCLEO-L4R5ZI at 24 MHz, average over 1,000 verifications",
+      "use": "checked before every decapsulation when ciphertexts are authenticated, as in the encrypt-then-sign KEM of Azouaoui et al. (TCHES 2022(4))"
+    }
+  },
+  "priors": {
+    "sign_iterations": {
+      "value": 5.1,
+      "source": "FIPS 204, Table 1, expected number of signing iterations for ML-DSA-65"
+    },
+    "l2_cycle_factor": {
+      "value": 1.05,
+      "range": [
+        1.02,
+        1.1
+      ],
+      "source": "assumption for random delays and dummy operations"
+    },
+    "l3_cycle_factor": {
+      "value": 1.25,
+      "range": [
+        1.02,
+        1.77
+      ],
+      "source": "Ait Manssour et al., AFRICACRYPT 2026 (+25% for masked fine shuffling), range from the survey of Ravi et al. (2% to 77%)"
+    },
+    "l3_rand_bytes": {
+      "value": 1024,
+      "range": [
+        512,
+        4096
+      ],
+      "source": "assumption for one permutation per protected loop"
+    },
+    "l3_stack_bytes": {
+      "value": 256,
+      "range": [
+        256,
+        1024
+      ],
+      "source": "assumption for the permutation buffer"
+    },
+    "masked_stack_factor": {
+      "1": {
+        "value": 1.9,
+        "range": [
+          1.6,
+          2.6
+        ]
+      },
+      "2": {
+        "value": 2.5,
+        "range": [
+          2.2,
+          3.0
+        ]
+      },
+      "3": {
+        "value": 3.2,
+        "range": [
+          2.8,
+          3.6
+        ]
+      },
+      "source": "our QEMU factors 1.88, 2.54, and 3.18 for pqm4_masked Kyber768, supported by the published factors 1.99 for mkm4 (Hou et al.) and 1.84 for masked Saber (Van Beirendonck et al.)"
+    },
+    "rand_unknown_factor": {
+      "value": 1.0,
+      "range": [
+        0.5,
+        2.0
+      ],
+      "source": "range applied to randomness borrowed from a related implementation"
+    },
+    "cycle_inflation": {
+      "value": 1.0,
+      "range": [
+        1.0,
+        1.3
+      ],
+      "source": "flash wait states above the 24 MHz measurement clock"
+    },
+    "l6_cycle_factor": {
+      "value": 2.4,
+      "range": [
+        2.0,
+        3.0
+      ],
+      "source": "Heinz and Poeppelmann, IEEE TC 2023, Table 4 (a CRT fault check raises a protected NTT from 7,737 to 18,448 cycles), and duplication at least doubles the protected work"
+    },
+    "l6_stack_factor": {
+      "value": 1.2,
+      "range": [
+        1.0,
+        1.5
+      ],
+      "source": "assumption for redundant state"
+    }
+  },
+  "attacks": [
+    {
+      "id": "kyberslash",
+      "operation": "decaps",
+      "channel": "timing",
+      "profiling": "none",
+      "chosen_inputs": true,
+      "max_order": 0,
+      "traces": null,
+      "source": "Bernstein et al. (KyberSlash), TCHES 2025(2), pp. 209-234",
+      "note": "secret-dependent division timing, covered by L1 with a binary-level check (E1), so no trace count enters the model"
+    },
+    {
+      "id": "ravi2020",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "target",
+      "chosen_inputs": true,
+      "max_order": 0,
+      "traces": 2560,
+      "bypasses_shuffling": false,
+      "source": "Ravi et al., TCHES 2020(3), Sec. 5.3 (unprotected Kyber512 on STM32F407, EM)",
+      "note": "plaintext-checking oracle with templates from 2x50 traces on the target"
+    },
+    {
+      "id": "kennaway2025",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "none",
+      "chosen_inputs": false,
+      "max_order": 0,
+      "traces": 179,
+      "bypasses_shuffling": false,
+      "source": "Kennaway et al., SECRYPT 2025 (pp. 263-274, DOI 10.5220/0013638600003979)",
+      "note": "two-step CPA on unprotected ML-KEM on an ARM Cortex-M4, full key from 179 traces without ciphertext manipulation"
+    },
+    {
+      "id": "tosun2024",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "none",
+      "chosen_inputs": false,
+      "max_order": 1,
+      "traces": 400,
+      "bypasses_shuffling": false,
+      "source": "Tosun et al., IEEE Access 12 (2024), Sec. VII-E and Fig. 11",
+      "note": "second-order CPA with a lattice step on the unmodified Bronchain-Cassiers code (850 traces without the lattice step), whereas shuffling of the base multiplication is recommended by the authors but not evaluated",
+      "assumed": [
+        "stop"
+      ]
+    },
+    {
+      "id": "hermelink2024",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "none",
+      "chosen_inputs": true,
+      "max_order": 3,
+      "traces": 7000,
+      "bypasses_shuffling": true,
+      "source": "Hermelink et al., ACM CCS 2024, Table 3",
+      "note": "attacks the masked comparison of D'Anvers et al. (IEEE TC 2023) with 4 shares on STM32F415/F3, and the key cost is estimated by simulation at sigma <= 10. Transfer to other comparisons and the failure of shuffling are assumed, because the source shows neither.",
+      "assumed": [
+        "transfer",
+        "bypass"
+      ]
+    },
+    {
+      "id": "balon2026",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": true,
+      "max_order": 3,
+      "traces": 1800,
+      "bypasses_shuffling": true,
+      "source": "Balon et al., TCHES 2026(4), Fig. 10a",
+      "note": "plaintext-checking oracle from masked Keccak in re-encryption, profiled with known shares, with the full key modeled at about 1.8k decapsulations for 2 to 4 shares. The source does not evaluate shuffling, so its failure is assumed.",
+      "assumed": [
+        "bypass"
+      ]
+    },
+    {
+      "id": "balon2026_7sh",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": true,
+      "max_order": 6,
+      "traces": 330000,
+      "bypasses_shuffling": true,
+      "source": "Balon et al., TCHES 2026(4), Fig. 10a",
+      "note": "same oracle at 7 shares, with about 3.3e5 decapsulations for a success rate of 0.77",
+      "assumed": [
+        "bypass"
+      ]
+    },
+    {
+      "id": "backlund2023",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": true,
+      "max_order": 1,
+      "traces": 38016,
+      "bypasses_shuffling": true,
+      "source": "Backlund et al., ACNS 2023 Workshops, Table VII",
+      "note": "masked and Fisher-Yates shuffled Kyber768 on STM32F415, worst case over 10 keys"
+    },
+    {
+      "id": "fouque2025",
+      "operation": "keygen",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": false,
+      "max_order": 0,
+      "traces": 1,
+      "bypasses_shuffling": false,
+      "source": "Fouque et al., TCHES 2025(4), Table 2",
+      "note": "single-trace attack on the CBD sampler of key generation, 99.98% success for Kyber768, unmasked in pqm4 and mkm4"
+    },
+    {
+      "id": "zhao2026",
+      "operation": "sign",
+      "channel": "power",
+      "profiling": "target",
+      "chosen_inputs": false,
+      "max_order": 0,
+      "traces": 300,
+      "bypasses_shuffling": false,
+      "source": "Zhao et al., DATE 2026, Table I",
+      "note": "unprotected ML-DSA-44 on STM32F405, templates from public challenges on the target"
+    },
+    {
+      "id": "hermelink2025",
+      "operation": "sign",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": false,
+      "max_order": 1,
+      "traces": 300,
+      "bypasses_shuffling": false,
+      "source": "Hermelink et al., CRYPTO 2025, Sec. 5",
+      "note": "first-order masked ML-DSA-44 through the nonce y, about 300 signatures with first-order HW leakage (27.6 to 247 with bit leakage)"
+    },
+    {
+      "id": "jendral2024",
+      "operation": "decaps",
+      "channel": "fault",
+      "profiling": "clone",
+      "chosen_inputs": false,
+      "max_order": 1,
+      "traces": 1,
+      "bypasses_shuffling": true,
+      "source": "Jendral et al., IEEE HOST 2024",
+      "note": "after a voltage glitch disables shuffling in first-order masked and shuffled Kyber, profiled power analysis recovers the message of one decapsulation from one trace"
+    },
+    {
+      "id": "krahmer2024",
+      "operation": "sign",
+      "channel": "fault",
+      "profiling": "none",
+      "chosen_inputs": false,
+      "max_order": 99,
+      "traces": 1,
+      "bypasses_shuffling": true,
+      "source": "Krahmer et al., TCHES 2024(3)",
+      "note": "correction fault attacks on randomized Dilithium"
+    }
+  ],
+  "attacks_about": "Published attacks with their key-recovery costs. The field profiling is none, target (templates from the attacked device without known secrets), or clone (a device with known keys or masks). The field traces counts the executions under one key, and max_order is the highest masking order broken. Each attack is assumed to transfer to every implementation of the same operation up to that order, because every such implementation contains the attacked step. The field assumed lists properties that the source does not show, namely transfer (to other algorithms of the step), bypass (of shuffling), and stop (by shuffling). A timing attack carries no trace count, because it is covered by L1 with the binary-level check E1."
+}

@@ -1,0 +1,170 @@
+{
+  "about": "Deployments of the paper. Times are in seconds and memory in bytes, whereas R_o is in operations per second and B_r in bytes per second. L_k is two years, the largest cryptoperiod recommended for a static decapsulation key in the draft SP 800-57 Part 1 Rev. 6.",
+  "deployments": [
+    {
+      "name": "gateway",
+      "label": "substation gateway behind site controls",
+      "operation": "decaps",
+      "A": "A1",
+      "S": "S1",
+      "chosen_inputs": true,
+      "fault": false,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0166666667,
+      "clock_hz": 100000000.0,
+      "B_c": 0.05,
+      "B_m": 65536,
+      "B_r": 4000000,
+      "rng": "trng",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "L1+L5 [pqm4_m4fstack]"
+    },
+    {
+      "name": "smart_meter",
+      "label": "smart meter with a static key-transport key",
+      "operation": "decaps",
+      "A": "A2",
+      "S": "S1",
+      "chosen_inputs": true,
+      "fault": false,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0011111111,
+      "clock_hz": 80000000.0,
+      "B_c": 0.5,
+      "B_m": 65536,
+      "B_r": 1000000,
+      "rng": "trng",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "ESCALATE(coverage)",
+      "expect_designs": {
+        "ephemeral keys": "L1+L5 order 0",
+        "authenticated ciphertexts": "L1+L3+L4+L5 order 1"
+      },
+      "expect_rekey": {
+        "below 7.29 days": "L1+L3+L4+L5 [mkm4_stream]"
+      }
+    },
+    {
+      "name": "grid",
+      "label": "grid controller with a static key",
+      "operation": "decaps",
+      "A": "A3",
+      "S": "S2",
+      "chosen_inputs": true,
+      "fault": false,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0011111111,
+      "clock_hz": 100000000.0,
+      "B_c": 0.1,
+      "B_m": 65536,
+      "B_r": 1000000,
+      "rng": "trng",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "ESCALATE(coverage)",
+      "expect_designs": {
+        "ephemeral keys": "ESCALATE(coverage)",
+        "authenticated ciphertexts": "L1+L3+L4+L5 order 1"
+      },
+      "expect_rekey": {
+        "below 1.87 days": "L1+L3+L4+L5 [bos_o1]"
+      }
+    },
+    {
+      "name": "battery",
+      "label": "battery-powered sensor with on-demand randomness and authenticated ciphertexts",
+      "operation": "decaps",
+      "A": "A2",
+      "S": "S1",
+      "chosen_inputs": false,
+      "verify": "mldsa65_verify",
+      "fault": false,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0033333333,
+      "clock_hz": 48000000.0,
+      "B_c": 0.2,
+      "B_c_offpath": 1.0,
+      "B_m": 24576,
+      "B_r": 65536,
+      "rng": "on_demand",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "ESCALATE(latency)",
+      "expect_designs": {
+        "ephemeral keys": "L1+L5 order 0",
+        "idle-time randomness pool": "L1+L3+L4+L5 order 1",
+        "off-path budget (session resumption)": "L1+L3+L4+L5 order 1"
+      }
+    },
+    {
+      "name": "signer",
+      "label": "ML-DSA-65 signer for TLS 1.3",
+      "operation": "sign",
+      "fips204": true,
+      "A": "A2",
+      "S": "S1",
+      "chosen_inputs": false,
+      "fault": false,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0033333333,
+      "clock_hz": 100000000.0,
+      "B_c": 0.2,
+      "B_m": 262144,
+      "B_r": 1000000,
+      "rng": "trng",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "ESCALATE(latency)"
+    },
+    {
+      "name": "relay",
+      "label": "protection relay with trip authority",
+      "operation": "decaps",
+      "A": "A3",
+      "S": "S2",
+      "chosen_inputs": true,
+      "fault": true,
+      "high_value": true,
+      "key_usage": "static",
+      "L_k": 63072000,
+      "R_o": 0.0011111111,
+      "clock_hz": 100000000.0,
+      "B_c": 0.02,
+      "B_m": 65536,
+      "B_r": 1000000,
+      "rng": "trng",
+      "weights": {
+        "c": 0.5,
+        "m": 0.25,
+        "r": 0.25
+      },
+      "expect": "ESCALATE(coverage)",
+      "expect_designs": {
+        "ephemeral keys": "ESCALATE(coverage)",
+        "authenticated ciphertexts": "ESCALATE(latency)"
+      }
+    }
+  ]
+}
