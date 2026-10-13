@@ -191,23 +191,32 @@ def evaluate(model, cand, d):
     """Latency, memory, and randomness of a candidate with its tests and J(s).
 
     With on-demand randomness, the generation time adds to the latency.
-    The measured cycle counts already contain the time of an on-chip random
-    source at their measurement clock, so this sum is a conservative bound.
-    An idle-time pool removes the generation time but holds the bytes of
-    one operation in RAM.  A deployment with authenticated ciphertexts also
-    verifies one signature before every decapsulation.  This check adds its
-    cycles to the latency, and its stack competes with the stack of the
-    decapsulation for the peak.
+    Most measured cycle counts already contain the time of an on-chip TRNG
+    at their measurement clock, so this sum is a conservative bound.  A
+    count without this time (rand_in_cycles false) pays the generation time
+    even with a TRNG, because its board had none.  An idle-time pool removes
+    the generation time but holds the bytes of one operation in RAM.  A
+    deployment with authenticated ciphertexts also verifies the signature of
+    every ciphertext before its decapsulation.  The check runs twice when
+    the attacker can inject faults, since one glitch could skip a single
+    check.  The checks add their cycles to the latency, and their stack
+    competes with the stack of the decapsulation for the peak.
     """
     cycles, stack, rand, used = costs(model, cand)
     t_cyc = cycles / d["clock_hz"]
     t_ver = 0.0
     if d.get("verify"):
         v = model.verifications[d["verify"]]
-        t_ver = v["cycles"] * model.p["cycle_inflation"] / d["clock_hz"]
+        checks = 2 if d.get("fault") else 1
+        t_ver = (checks * v["cycles"] * model.p["cycle_inflation"]
+                 / d["clock_hz"])
         stack = max(stack, float(v["stack_bytes"]))
     mode = d.get("rng", "trng")
-    t_rand = rand / d["B_r"] if mode == "on_demand" else 0.0
+    if mode == "on_demand" or (mode == "trng"
+                               and not cand.impl.get("rand_in_cycles", True)):
+        t_rand = rand / d["B_r"]
+    else:
+        t_rand = 0.0
     if mode == "pool":
         stack += rand
     latency = t_cyc + t_ver + t_rand
@@ -256,7 +265,8 @@ def applicable_attacks(model, d):
 
     A known-technique attacker (S1) runs attacks without profiling and
     attacks whose templates come from the target itself, whereas profiling
-    on a clone with known keys or masks requires a profiling attacker (S2).
+    on a clone with known keys, masks, or messages requires a profiling
+    attacker (S2).
     """
     ops = {d["operation"]}
     if d.get("keygen_on_device"):
@@ -284,10 +294,12 @@ def defeats(a, cand, n_k, margin):
     """True if attack a breaks candidate cand within the exposure n_k.
 
     An attack breaks a masked stack when the masking order of the stack
-    does not exceed the highest order broken in the source of the attack
-    and when the attack is not stopped by shuffling.  It also needs its
-    traces or queries within reach under the safety margin, that is,
-    margin * n_k >= traces.  A fault attack is met only by fault detection.
+    does not exceed the order broken at this cost in its source and when
+    the attack is not stopped by shuffling.  It also needs its traces or
+    queries within reach under the safety margin, that is, margin * n_k >=
+    traces.  A fault attack is met only by fault detection (L6), which
+    includes control-flow checks, because a glitch that skips the shuffling
+    loop leaves the result correct.
     """
     if a["channel"] == "timing":
         return False                 # L1 is always present and checked by E1
@@ -464,10 +476,14 @@ def rekey_limit(model, d):
     """Largest exposure N_k that lets some software stack cover d.
 
     Returns (n_max, candidate name), or None when exposure limits cannot
-    help because a single-trace or key-generation attack is binding.  Among
-    stacks with the same limit, the stack with the lowest J(s) is reported,
-    which is the stack that the selection picks under that exposure.
+    help because a single-trace or key-generation attack is binding.  Like
+    ephemeral keys, the new keys come from key generation on the device, so
+    re-keying is ruled out by a key-generation attack within reach of the
+    attacker.  Among stacks with the same limit, the stack with the lowest
+    J(s) is reported, which is the stack picked by the selection under that
+    exposure.
     """
+    d = dict(d, keygen_on_device=True)
     attacks = applicable_attacks(model, d)
     margin = d.get("margin", 10)
     best = None
@@ -505,17 +521,20 @@ def rekey_period(model, d):
 
 
 def period_label(seconds):
-    """Period bound rounded down, in days or, below one day, in hours."""
+    """Period bound rounded down, in days, in hours, or in minutes."""
     if seconds >= 86400:
         return "below %.2f days" % (math.floor(seconds / 864) / 100)
-    return "below %.1f hours" % (math.floor(seconds / 360) / 10)
+    if seconds >= 3600:
+        return "below %.1f hours" % (math.floor(seconds / 360) / 10)
+    return "below %.0f minutes" % math.floor(seconds / 60)
 
 
 def escalation_changes(d):
     """Descriptor changes tried by the escalation step, as (label, changes).
 
     Authenticated ciphertexts remove the chosen-ciphertext flag, but the
-    device then verifies one ML-DSA-65 signature before every decapsulation.
+    device then verifies the ML-DSA-65 signature of every ciphertext before
+    its decapsulation, twice when the attacker can inject faults.
     """
     out = []
     if d["operation"] == "decaps" and d.get("key_usage") != "ephemeral":
@@ -542,11 +561,18 @@ def escalation_options(model, d):
     rk = rekey_period(model, d)
     if rk is not None:
         n_max, period, name = rk
-        label = "re-keying with N_k < %.0f (period %s)" % (n_max, period_label(period))
-        if period >= d.get("min_rekey_period", 86400):
-            opts.append((label, name))
+        if n_max < 1:
+            opts.append(("re-keying with N_k < %.1f" % n_max,
+                         "impossible, because one operation per key is "
+                         "already within reach of an attack"))
         else:
-            opts.append((label, "impractical, because the period is below one day"))
+            label = "re-keying with N_k < %.0f (period %s)" % (
+                n_max, period_label(period))
+            if period >= d.get("min_rekey_period", 86400):
+                opts.append((label, name))
+            else:
+                opts.append((label,
+                             "impractical, because the period is below one day"))
     opts.append(("relocate the secret or use a certified secure element",
                  "hardware path, evidence E5"))
     return opts
@@ -604,7 +630,7 @@ def robustness(catalog, d, outcome=False):
     return base, corners, changed, deciding
 
 
-# Attack properties that a source does not show are marked in the catalog.
+# Attack properties not shown in a source are marked in the catalog.
 # "transfer" marks an attack shown on one algorithm of a step, "bypass" an
 # attack whose source did not evaluate shuffling, and "stop" an attack whose
 # source only recommends shuffling against it.
@@ -882,7 +908,8 @@ def report(model, d):
                 print("  - %-44s -> %s, %s" % (label, b2["cand"].name,
                                                row_text(b2, d2)))
         for label, dec in escalation_options(model, d):
-            if label.startswith("re-keying") and dec.startswith("impractical"):
+            if label.startswith("re-keying") and dec.startswith(
+                    ("impractical", "impossible")):
                 print("  - %-44s -> %s" % (label, dec))
         print("  - %-44s -> hardware path, evidence E5"
               % "certified secure element or key relocation")
@@ -929,10 +956,16 @@ def run_checks(catalog, deployments):
           impls["azouaoui_det"]["stack_bytes"] == 145532)
     det = costs(model, Candidate(impls["azouaoui_det"]))[0] / 100e6
     rnd = costs(model, Candidate(impls["azouaoui_rand"]))[0] / 100e6
-    check("masked FIPS 204 signing needs about 1.11 s at 100 MHz",
-          1.105 < det < 1.12)
-    check("the randomized variant needs about 0.63 s at 100 MHz",
-          0.625 < rnd < 0.64)
+    det3 = costs(model, Candidate(impls["azouaoui_det"], l3=True))[0] / 100e6
+    rnd3 = costs(model, Candidate(impls["azouaoui_rand"], l3=True))[0] / 100e6
+    check("masked FIPS 204 signing needs about 1.09 s at 100 MHz",
+          1.085 < det < 1.10)
+    check("the randomized variant needs about 0.61 s at 100 MHz",
+          0.605 < rnd < 0.62)
+    check("with shuffling, masked FIPS 204 signing needs about 1.37 s",
+          1.36 < det3 < 1.37)
+    check("with shuffling, the randomized variant needs about 0.77 s",
+          0.76 < rnd3 < 0.77)
     for d in deployments:
         b1, _ = select(model, d)
         b2, _ = select(model, d, exhaustive=True)
@@ -955,6 +988,18 @@ def run_checks(catalog, deployments):
             got = None if rk is None else (period_label(rk[1]), rk[2])
             check("%s re-keying %s: %s" % (d["name"], label, want),
                   got is not None and got[0] == label and got[1] == want)
+        if d.get("expect_no_rekey"):
+            rk = rekey_period(model, d)
+            check("%s: re-keying cannot cover the deployment" % d["name"],
+                  rk is None or rk[1] < d.get("min_rekey_period", 86400))
+    relay = dict(by_name["relay"])
+    relay.update(dict(escalation_changes(relay))["authenticated ciphertexts"])
+    fastest = min(evaluate(model, c, relay)["latency"]
+                  for c, covered in minimal_candidates(
+                      model, relay, applicable_attacks(model, relay))
+                  if covered)
+    check("relay with authenticated ciphertexts still needs about 141.8 ms",
+          0.1413 < fastest < 0.1423)
     sens = attack_sensitivity(catalog, by_name["smart_meter"])
     check("meter fits with first-order masking without the transfer assumption",
           sens["without transfer"] == "L1+L3+L4+L5 order 1")
@@ -963,6 +1008,9 @@ def run_checks(catalog, deployments):
     sens = attack_sensitivity(catalog, by_name["grid"])
     check("grid escalates on latency when shuffling stops all attacks",
           sens["without bypass"] == "ESCALATE(latency)")
+    sens = attack_sensitivity(catalog, by_name["signer"])
+    check("signer escalates on coverage when shuffling stops no attack",
+          sens["without stop"] == "ESCALATE(coverage)")
     rows = bench(seed_count=1)
     check("synthetic catalogs: pruned search finds the exhaustive optimum",
           all(r[6] for r in rows))

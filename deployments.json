@@ -51,7 +51,7 @@
         "authenticated ciphertexts": "L1+L3+L4+L5 order 1"
       },
       "expect_rekey": {
-        "below 7.29 days": "L1+L3+L4+L5 [mkm4_stream]"
+        "below 7.29 days": "L1+L3+L4+L5 [bos_o1]"
       }
     },
     {
@@ -80,9 +80,7 @@
         "ephemeral keys": "ESCALATE(coverage)",
         "authenticated ciphertexts": "L1+L3+L4+L5 order 1"
       },
-      "expect_rekey": {
-        "below 1.87 days": "L1+L3+L4+L5 [bos_o1]"
-      }
+      "expect_no_rekey": true
     },
     {
       "name": "battery",
@@ -136,7 +134,8 @@
         "m": 0.25,
         "r": 0.25
       },
-      "expect": "ESCALATE(latency)"
+      "expect": "ESCALATE(latency)",
+      "expect_no_rekey": true
     },
     {
       "name": "relay",

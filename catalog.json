@@ -36,8 +36,8 @@
       "stack_source": "Hou et al., IEEE ICDCS 2026, peak SRAM at -O3",
       "rand_bytes": null,
       "rand_prior": "bos_o1",
-      "rand_in_cycles": true,
-      "note": "the STM32F303 board has no TRNG, so the randomness source behind these counts is not stated"
+      "rand_in_cycles": false,
+      "note": "the STM32F303 has no TRNG, so these counts exclude the TRNG time, which is added by the latency model"
     },
     {
       "id": "mkm4_stream",
@@ -50,8 +50,8 @@
       "stack_source": "Hou et al., IEEE ICDCS 2026, peak SRAM at -O3",
       "rand_bytes": null,
       "rand_prior": "bos_o1",
-      "rand_in_cycles": true,
-      "note": "the STM32F303 board has no TRNG, so the randomness source behind these counts is not stated"
+      "rand_in_cycles": false,
+      "note": "the STM32F303 has no TRNG, so these counts exclude the TRNG time, which is added by the latency model"
     },
     {
       "id": "bos_o1",
@@ -149,8 +149,8 @@
       "operation": "sign",
       "label": "Dilithium3 deterministic signing of Azouaoui et al. (2 shares)",
       "order": 1,
-      "cycles_per_iteration": 24005000,
-      "cycles_source": "Azouaoui et al. TCHES 2023(4) Section 6.3 on a NUCLEO-L4R5ZI, one pass of signing without rejections with TRNG randomness",
+      "cycles_per_iteration": 23613800,
+      "cycles_source": "Azouaoui et al. TCHES 2023(4) Table 2 on a NUCLEO-L4R5ZI, Sign row for 2 shares, one pass of signing without rejections with TRNG randomness (their Section 6.3 quotes 24,005k cycles, which disagrees with Table 2)",
       "cycles_once": 2716200,
       "cycles_once_source": "Azouaoui et al. TCHES 2023(4) Table 2, where NTT(s) with 185.4k, ExpandA with 2,160.7k, and H(K||mu) with 370.1k cycles run once per signature",
       "stack_bytes": 145532,
@@ -165,8 +165,8 @@
       "operation": "sign",
       "label": "Dilithium3 randomized signing of Azouaoui et al. (2 shares)",
       "order": 1,
-      "cycles_per_iteration": 14282000,
-      "cycles_source": "Azouaoui et al. TCHES 2023(4) Section 6.3 on a NUCLEO-L4R5ZI, one pass of signing without rejections with TRNG randomness",
+      "cycles_per_iteration": 13891400,
+      "cycles_source": "Azouaoui et al. TCHES 2023(4) Table 2 on a NUCLEO-L4R5ZI, Sign row for 2 shares, one pass of signing without rejections with TRNG randomness (their Section 6.3 quotes 14,282k cycles, which disagrees with Table 2)",
       "cycles_once": 2346100,
       "cycles_once_source": "Azouaoui et al. TCHES 2023(4) Table 2, where NTT(s) and ExpandA run once per signature and the randomized variant skips H(K||mu)",
       "stack_bytes": 145532,
@@ -205,7 +205,7 @@
         1.02,
         1.77
       ],
-      "source": "Ait Manssour et al., AFRICACRYPT 2026 (+25% for masked fine shuffling), range from the survey of Ravi et al. (2% to 77%)"
+      "source": "Ait Manssour et al., AFRICACRYPT 2026, Table 2 (+24% for fine shuffling with a masked permutation on unmasked ML-KEM-768 decapsulation, rounded to 25% in their abstract), range from the survey of Ravi et al. (2% to 77%), and no published measurement shuffles masked code"
     },
     "l3_rand_bytes": {
       "value": 1024,
@@ -341,7 +341,7 @@
       "traces": 7000,
       "bypasses_shuffling": true,
       "source": "Hermelink et al., ACM CCS 2024, Table 3",
-      "note": "attacks the masked comparison of D'Anvers et al. (IEEE TC 2023) with 4 shares on STM32F415/F3, and the key cost is estimated by simulation at sigma <= 10. Transfer to other comparisons and the failure of shuffling are assumed, because the source shows neither.",
+      "note": "attacks the masked comparison of D'Anvers et al. (IEEE TC 2023) with 4 shares on STM32F415/F3, and the key cost is estimated by simulation at sigma <= 10. Transfer to other comparisons and the failure of shuffling are assumed, because the source shows neither. The source even states that its attack does not directly apply to the comparisons of Bhasin et al. (TCHES 2021) and D'Anvers et al. (TCHES 2022), so the transfer is a worst case.",
       "assumed": [
         "transfer",
         "bypass"
@@ -386,8 +386,38 @@
       "max_order": 1,
       "traces": 38016,
       "bypasses_shuffling": true,
-      "source": "Backlund et al., ACNS 2023 Workshops, Table VII",
-      "note": "masked and Fisher-Yates shuffled Kyber768 on STM32F415, worst case over 10 keys"
+      "source": "Backlund et al., ACNS 2023 Workshops, LNCS 13907, Table 6",
+      "note": "first-order masked Kyber768 of Heinz et al. with Fisher-Yates shuffling added, on STM32F415 at 24 MHz, profiled on a second board, worst case over 10 keys at code distance 6"
+    },
+    {
+      "id": "wang2024",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": true,
+      "max_order": 3,
+      "traces": 144,
+      "bypasses_shuffling": true,
+      "source": "Wang et al., ACNS 2024, LNCS 14585, Table 8",
+      "note": "profiled deep learning on the masked Boolean to arithmetic conversion of the message in the re-encryption of the Bronchain-Cassiers code, with 9 chosen ciphertexts repeated 16 times for success rate 0.82 at third order (0.97 at second order) on STM32F415. The source does not evaluate shuffling, so its failure is assumed.",
+      "assumed": [
+        "bypass"
+      ]
+    },
+    {
+      "id": "wang2024_o1",
+      "operation": "decaps",
+      "channel": "power",
+      "profiling": "clone",
+      "chosen_inputs": true,
+      "max_order": 1,
+      "traces": 18,
+      "bypasses_shuffling": true,
+      "source": "Wang et al., ACNS 2024, LNCS 14585, Table 6",
+      "note": "same attack at first order, with 9 chosen ciphertexts repeated twice for success rate 0.94",
+      "assumed": [
+        "bypass"
+      ]
     },
     {
       "id": "fouque2025",
@@ -412,6 +442,33 @@
       "bypasses_shuffling": false,
       "source": "Zhao et al., DATE 2026, Table I",
       "note": "unprotected ML-DSA-44 on STM32F405, templates from public challenges on the target"
+    },
+    {
+      "id": "zhao2026fusion",
+      "operation": "sign",
+      "channel": "power",
+      "profiling": "none",
+      "chosen_inputs": false,
+      "max_order": 1,
+      "traces": 114,
+      "bypasses_shuffling": false,
+      "source": "Zhao et al., ACM CCS 2026, Table 5",
+      "note": "non-profiled horizontal fusion of the repeated products in the matrix-vector product of signing, against the first-order masked ML-DSA-65 of Coron et al. (TCHES 2024) on STM32F405, in deterministic and hedged signing alike. Shuffling of the row-wise products is proposed by the authors but not evaluated, so it is assumed to stop the attack.",
+      "assumed": [
+        "stop"
+      ]
+    },
+    {
+      "id": "zhao2026fusion_o0",
+      "operation": "sign",
+      "channel": "power",
+      "profiling": "none",
+      "chosen_inputs": false,
+      "max_order": 0,
+      "traces": 4,
+      "bypasses_shuffling": false,
+      "source": "Zhao et al., ACM CCS 2026, Table 4",
+      "note": "same attack against the unprotected reference ML-DSA-65"
     },
     {
       "id": "hermelink2025",
@@ -450,5 +507,5 @@
       "note": "correction fault attacks on randomized Dilithium"
     }
   ],
-  "attacks_about": "Published attacks with their key-recovery costs. The field profiling is none, target (templates from the attacked device without known secrets), or clone (a device with known keys or masks). The field traces counts the executions under one key, and max_order is the highest masking order broken. Each attack is assumed to transfer to every implementation of the same operation up to that order, because every such implementation contains the attacked step. The field assumed lists properties that the source does not show, namely transfer (to other algorithms of the step), bypass (of shuffling), and stop (by shuffling). A timing attack carries no trace count, because it is covered by L1 with the binary-level check E1."
+  "attacks_about": "Published attacks with their key-recovery costs. The field profiling is none, target (templates from the attacked device without known secrets), or clone (a device with known keys, masks, or messages). The field traces counts the executions under one key, and max_order is the highest masking order broken. Each attack is assumed to transfer to every implementation of the same operation up to that order, because every such implementation contains the attacked step. The field assumed lists properties not shown in the source, namely transfer (to other algorithms of the step), bypass (of shuffling), and stop (by shuffling). A timing attack carries no trace count, because it is covered by L1 with the binary-level check E1."
 }

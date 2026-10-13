@@ -40,13 +40,21 @@ S, plus flags for chosen inputs and fault capability. The exposure N_k counts
 the secret-bearing operations per key epoch, so an ephemeral key gives
 N_k = 1. A deployment with authenticated ciphertexts also pays one ML-DSA-65
 signature check per decapsulation, so its latency includes the verification
-cycles.
+cycles. The check runs twice when the attacker can inject faults, because one
+glitch could skip a single check.
+
+Most measured cycle counts include the time of an on-chip TRNG. The two counts
+from the STM32F303 exclude it, since this board has no TRNG, so the latency
+of these implementations always includes the generation time, as with
+on-demand randomness. Ephemeral keys and re-keying both generate new keys on
+the device, so a key-generation attack within reach of the attacker rules out
+both designs.
 
 An attack of the catalog applies when the attacker meets its requirements. A
 known-technique attacker (S1) runs attacks without profiling and attacks whose
 templates come from the target itself, whereas profiling on a clone with known
-keys or masks needs S2. An applicable attack defeats a stack when the masking
-order of the stack does not exceed the order broken in the paper, when it is
+keys, masks, or messages needs S2. An applicable attack defeats a stack when the masking
+order of the stack does not exceed the order broken in its source, when it is
 not stopped by shuffling, and when its traces lie within reach. The safety
 margin mu of the paper (default 10, the field `margin` of a descriptor) defines
 this reach as mu * N_k >= traces. Shuffling only counts on masked stacks,
@@ -63,15 +71,18 @@ the exhaustive search.
 
 ## Attack assumptions
 
-Some attack properties are assumed rather than shown in their sources, so the
-catalog marks them in the field `assumed` of each attack.
+Some attack properties are assumed rather than shown in their sources, so they
+are marked in the field `assumed` of each attack.
 
 - `transfer` marks an attack shown on one algorithm of a step, such as one
-  masked comparison.
+  masked comparison. The comparison attack of Hermelink et al. carries this
+  mark, since its source even states that it does not directly apply to two
+  earlier comparison designs.
 - `bypass` marks an attack whose source did not evaluate shuffling, so the
   attack is assumed to pass it.
 - `stop` marks an attack whose source only recommends shuffling against it, so
-  shuffling is assumed to stop the attack.
+  shuffling is assumed to stop the attack. The attacks of Tosun et al. and of
+  Zhao et al. (ACM CCS 2026) carry this mark.
 
 `--assumptions` reruns every decision and design without each kind of
 assumption and with margins mu from 0.1 to 1000. The attack assumptions change
@@ -80,7 +91,9 @@ more outcomes than the cost priors of `--robustness`.
 ## Data provenance
 
 Published figures come from pqm4 at commit `cc2c1b99` and from the papers named
-in `catalog.json`. Three kinds of values come from our own QEMU measurements
+in `catalog.json`. The per-pass signing counts of Azouaoui et al. come from
+their Table 2, because the totals quoted in their Section 6.3 disagree with
+that table. Three kinds of values come from our own QEMU measurements
 (mps2-an386, Arm GNU Toolchain 11.3.Rel1).
 
 | Value | 2 shares | 3 shares | 4 shares | Notes |
@@ -147,13 +160,13 @@ qemu-system-arm -M mps2-an386 -nographic -semihosting -kernel elf/${K}_stack.elf
 Each stack benchmark prints the stack usage of every operation. The masked
 builds repeat with `-DNSHARES=3` and `-DNSHARES=4` after `make clean`, and
 `crypto_sign_dilithium3_m4f_masked_stack.elf` gives the signing figures. The
-scheme list `obj/.schemes.mk` is generated first, because GNU make 4.4 no
-longer remakes it on its own. The unmasked builds of pqm4_masked need a dummy
-`-DNSHARES=1`, because a shared benchmark helper prints the share count. The
-randomness counts come from `elf/${K}_speed_sub.elf` built with
+scheme list `obj/.schemes.mk` is generated first, because it is no longer
+remade automatically by GNU make 4.4. The unmasked builds of pqm4_masked need a
+dummy `-DNSHARES=1`, because a shared benchmark helper prints the share count.
+The randomness counts come from `elf/${K}_speed_sub.elf` built with
 `-DBENCH=1 -DBENCH_RND=1`, which counts 32-bit TRNG words, so the random bytes
-are four times this count. The `tches` tag of pqm4_masked holds the release
-behind the published cycle counts. The same steps on this tag give the
-2-share decapsulation stack of the table above (12,132 B), whereas the current
-branch needs 12,148 B. Both versions agree on the 3-share stack and on the
-randomness counts.
+are four times this count. The `tches` tag of pqm4_masked holds the release behind the
+published cycle counts. The same steps on this tag give the 2-share
+decapsulation stack of the table above (12,132 B), whereas the current branch
+needs 12,148 B. Both versions agree on the 3-share stack and on the randomness
+counts.
